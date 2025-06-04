@@ -1,0 +1,97 @@
+// libraries
+#include <Arduino.h>
+#include <HX711.h>
+
+//definiton of tensometr
+#define DTpin A0 
+#define SCKpin A1
+
+//definition of endstop
+#define EndStop_pin 12
+
+//defenition of stepper motor
+#define STEP 7
+#define DIR 6
+//#define EN 5
+
+//definition steps per mm 
+#define stepsPerMM 5100
+
+//calibtarion coefficient
+float calibrationFactor = 8800.0;
+
+// object of tenso
+HX711 scale;
+
+void setup(){ // initialization
+  
+  //diagnostic monitor 
+  Serial.begin(9600);
+  Serial.println("startup of machine"); // cheking monitor
+
+  //stepper init
+  pinMode(STEP,OUTPUT);
+  pinMode(DIR,OUTPUT);
+  //pinMode(EN, OUTPUT);
+  //digitalWrite(EN,LOW);
+  //endstop init
+  pinMode(EndStop_pin, INPUT_PULLUP);
+  //Tensometr
+  scale.begin(DTpin,SCKpin);
+  if (!scale.is_ready())
+  {
+    Serial.println("HX711 is not ready");
+  }
+  else
+  {
+    Serial.println("HX711 is ready");
+  }
+  scale.set_scale(calibrationFactor);
+  scale.tare();
+  Serial.println("tenso is calibrated"); 
+}
+
+  void loop()
+  {
+    // zero position
+    Serial.println("Setuping zero point");
+    
+    digitalWrite(DIR,HIGH);
+    while(digitalRead(EndStop_pin)== HIGH){
+      digitalWrite(STEP, HIGH);
+      delay(1);
+      digitalWrite(STEP,LOW);
+      delay(1);
+    }
+
+    Serial.println("zero point detected");
+    delay(1000);
+    
+    //distance from zero
+    Serial.println("write distance");
+    while(!Serial.available()){
+
+    }
+
+    int sampleLengthMM = Serial.parseInt();
+    Serial.print("get it");
+    Serial.print(sampleLengthMM);
+    Serial.println("mm");
+
+    long totalSteps = (long)sampleLengthMM * stepsPerMM;
+
+    Serial.println("move to ");
+    digitalWrite(DIR, LOW);
+
+    for(long i = 0; i< totalSteps; i++){
+      digitalWrite(STEP, HIGH);
+      delay(1);
+      digitalWrite(STEP, LOW);
+      delay(1);
+    }
+
+    Serial.println("position is reached");
+    while(true);
+
+
+  }
