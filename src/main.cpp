@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include <HX711.h>
 
 // Піни тензодатчика
